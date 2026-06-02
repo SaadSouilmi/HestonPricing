@@ -1,2 +1,2 @@
-cc -std=c11 -Wall -o build/test src/test.c
+cc -std=c11 -Wall -lm -o build/test src/test.c
 ./build/test

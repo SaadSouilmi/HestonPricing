@@ -181,8 +181,8 @@ test_poisson_moments(Ran *rng, f64 lambda) {
     f64 var_tol = 5.0 * sqrt((lambda + 2.0 * lambda * lambda) / (f64)n);
     f64 p0_se = sqrt(exp(-lambda) * (1.0 - exp(-lambda)) / (f64)n);
 
-    ExpectNear(mean, lambda, mean_tol);            /* E[k]   = lambda */
-    ExpectNear(var, lambda, var_tol);              /* Var[k] = lambda */
+    ExpectNear(mean, lambda, mean_tol);               /* E[k]   = lambda */
+    ExpectNear(var, lambda, var_tol);                 /* Var[k] = lambda */
     ExpectNear(p0, exp(-lambda), 5.0 * p0_se + 1e-9); /* P(0) = e^-lambda */
 }
 

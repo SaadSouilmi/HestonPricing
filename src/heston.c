@@ -7,8 +7,54 @@
 //~ MC Pricing
 ////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////
+//~ Exact simulation
 
+internal f64
+real_integrated_var_cf(const heston_params *p, f64 V1, f64 V2, f64 dt, f64 d,
+                       f64 z_kappa, f64c I_denom, f64 a) {
+    f64c g = csqrt(p->kappa * p->kappa - 2 * p->sigma * p->sigma * I * a);
+    f64 emkdt = exp(-p->kappa * dt);
+    f64c emgdt = cexp(-g * dt);
+    f64 svs = sqrt(V1 * V2);
+    f64c z_gamma =
+        svs * 4 * g * cexp(-0.5 * g * dt) / (p->sigma * p->sigma * (1 - emgdt));
 
+    f64c term1 = g * cexp(-0.5 * (g - p->kappa) * dt) * (1 - emkdt) /
+                 (p->kappa * (1 - emgdt));
+    f64c term2 = cexp(
+        (V1 + V2) / (p->sigma * p->sigma) *
+        (p->kappa * (1 + emkdt) / (1 - emkdt) - g * (1 + emgdt) / (1 - emgdt)));
+    f64c I_num = cbessel_i_scaled(0.5 * d - 1.0, z_gamma);
+    f64c term3 = cexp(z_gamma - z_kappa) * I_num / I_denom;
+
+    return creal(term1 * term2 * term3);
+}
+
+internal f64
+sample_integrated_var(const heston_params *p) {}
+
+internal void
+price_call_exact_sim(const heston_params *p, pricing_surface *s, Ran *rng,
+                     u64 M) {
+    f64 V1 = p->v0;
+    f64 V2 = 0;
+    f64 S = p->S0;
+    f64 t1 = 0;
+    f64 t2 = 0;
+    f64 dt = 0;
+    for (u64 i = 0; i < s->nT; i++) {
+        t2 = p->maturities[i];
+        dt = t2 - t1;
+        /* Sample V2 | V1 */
+        f64 d = 4 * p->theta * p->kappa / (p->sigma * p->sigma);
+        f64 emkdt = exp(-p->kappa * dt);
+        f64 lambda =
+            4 * p->kappa * emkdt / (p->sigma * p->sigma * (1 - emkdt)) * V1;
+        V2 = ran_noncentral_chi2(rng, d, lambda);
+        V2 *= (1 - emkdt) * p->sigma * p->sigma / (4 * p->kappa);
+    }
+}
 
 ////////////////////////////////////////////////////////////
 //~ Fourrier Pricing
